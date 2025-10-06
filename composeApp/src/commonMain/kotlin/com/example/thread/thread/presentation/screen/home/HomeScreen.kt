@@ -1,13 +1,41 @@
-package com.example.thread.thread
+package com.example.thread.thread.presentation.screen.home
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.absoluteOffset
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
@@ -23,102 +51,108 @@ import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
-import org.jetbrains.compose.ui.tooling.preview.Preview
+import androidx.navigation.NavHostController
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-@Preview
-fun App() {
-    MaterialTheme {
-        var idx by remember { mutableStateOf(0) }
-        val steps = listOf("fab", "promo", "profile")
+fun HomeScreen(navController: NavHostController) {
+    var idx by remember { mutableStateOf(0) }
+    val steps = listOf("fab", "promo", "profile")
 
-        var rectFab by remember { mutableStateOf<Rect?>(null) }
-        var rectPromo by remember { mutableStateOf<Rect?>(null) }
-        var rectProfile by remember { mutableStateOf<Rect?>(null) }
+    var rectFab by remember { mutableStateOf<Rect?>(null) }
+    var rectPromo by remember { mutableStateOf<Rect?>(null) }
+    var rectProfile by remember { mutableStateOf<Rect?>(null) }
 
-        var overlayOffset by remember { mutableStateOf(Offset.Zero) } // posisi overlay di window
-        var show by remember { mutableStateOf(true) }
+    var overlayOffset by remember { mutableStateOf(Offset.Zero) } // posisi overlay di window
+    var show by remember { mutableStateOf(true) }
 
-        Box(Modifier.fillMaxSize()) {
-            Scaffold(
-                topBar = {
-                    TopAppBar(
-                        title = { Text("Beranda") },
-                        actions = {
-                            IconButton(
-                                onClick = {},
-                                modifier = Modifier.captureRectInWindow { rectProfile = it }
-                            ) {
-                                Icon(Icons.Default.AccountCircle, contentDescription = "Profile")
-                            }
-                        }
-                    )
-                },
-                floatingActionButton = {
-                    FloatingActionButton(
-                        onClick = {},
-                        modifier = Modifier.captureRectInWindow { rectFab = it }
-                    ) {
-                        Icon(Icons.Default.Add, contentDescription = "Add")
-                    }
-                }
-            ) { padding ->
-                Column(
-                    modifier = Modifier
-                        .padding(padding)
-                        .fillMaxSize()
-                ) {
-                    Card(
-                        modifier = Modifier
-                            .padding(16.dp)
-                            .fillMaxWidth()
-                            .height(120.dp)
-                            .captureRectInWindow { rectPromo = it }
-                    ) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
+    Box(Modifier.fillMaxSize()) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("Beranda") },
+                    navigationIcon = {
+                        IconButton(
+                            onClick = {
+                                navController.popBackStack()
+                            },
                         ) {
-                            Text("Card Promo")
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "back")
+                        }
+                    },
+                    actions = {
+                        IconButton(
+                            onClick = {},
+                            modifier = Modifier.captureRectInWindow { rectProfile = it }
+                        ) {
+                            Icon(Icons.Default.AccountCircle, contentDescription = "Profile")
                         }
                     }
-                    Spacer(Modifier.height(800.dp))
+                )
+            },
+            floatingActionButton = {
+                FloatingActionButton(
+                    onClick = {},
+                    modifier = Modifier.captureRectInWindow { rectFab = it }
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Add")
                 }
             }
-
-            // --- tangkap offset overlay terhadap window
-            Box(
-                Modifier
-                    .matchParentSize()
-                    .onGloballyPositioned { overlayOffset = it.localToWindow(Offset.Zero) }
-            )
-
-            // --- pilih rect target
-            val target = when (steps.getOrNull(idx)) {
-                "fab" -> rectFab
-                "promo" -> rectPromo
-                "profile" -> rectProfile
-                else -> null
+        ) { padding ->
+            Column(
+                modifier = Modifier
+                    .padding(padding)
+                    .fillMaxSize()
+            ) {
+                Card(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth()
+                        .height(120.dp)
+                        .captureRectInWindow { rectPromo = it }
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("Card Promo")
+                    }
+                }
+                Spacer(Modifier.height(800.dp))
             }
-
-            WalkthroughOverlayFixed(
-                visible = show,
-                targetRectInWindow = target,
-                overlayWindowOffset = overlayOffset,
-                stepTitle = when (steps.getOrNull(idx)) {
-                    "fab" -> "Tambah data"
-                    "promo" -> "Promo spesial"
-                    else -> "Profil kamu"
-                },
-                stepDesc = "Ikuti petunjuk ini.",
-                stepIndex = idx,
-                stepsCount = steps.size,
-                onNext = { if (idx < steps.lastIndex) idx++ else show = false },
-                onBack = { if (idx > 0) idx-- },
-                onSkip = { show = false }
-            )
         }
+
+        // --- tangkap offset overlay terhadap window
+        Box(
+            Modifier
+                .matchParentSize()
+                .onGloballyPositioned { overlayOffset = it.localToWindow(Offset.Zero) }
+        )
+
+        // --- pilih rect target
+        val target = when (steps.getOrNull(idx)) {
+            "fab" -> rectFab
+            "promo" -> rectPromo
+            "profile" -> rectProfile
+            else -> null
+        }
+
+        WalkthroughOverlayFixed(
+            visible = show,
+            targetRectInWindow = target,
+            overlayWindowOffset = overlayOffset,
+            stepTitle = when (steps.getOrNull(idx)) {
+                "fab" -> "Tambah data"
+                "promo" -> "Promo spesial"
+                else -> "Profil kamu"
+            },
+            stepDesc = "Ikuti petunjuk ini.",
+            stepIndex = idx,
+            stepsCount = steps.size,
+            onNext = { if (idx < steps.lastIndex) idx++ else show = false },
+            onBack = { if (idx > 0) idx-- },
+            onSkip = { show = false }
+        )
     }
 }
 

@@ -18,7 +18,7 @@ koin = "4.1.1"
 kotlinxSerializationJson = "1.9.0"
 kotlinxCoroutines = "1.10.2"
 kotlinxDatetime = "0.7.1"
-navigationCompose = "2.8.0-alpha10"
+navigationCompose = "2.9.0"
 icon-md3 = "1.7.3"
 
 
