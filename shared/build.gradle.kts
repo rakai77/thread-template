@@ -31,6 +31,13 @@ kotlin {
             implementation(libs.ktor.encoding)
             implementation(libs.ktor.content.negotiation)
             implementation(libs.ktor.serialization.kotlinx.json)
+
+            api(libs.kotlinx.serialization.json)
+            api(libs.kotlinx.coroutines.core)
+            api(libs.kotlinx.datetime)
+            api(libs.koin.core)
+            api(libs.koin.compose.viewmodel)
+            api(libs.koin.compose)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

@@ -5,7 +5,7 @@ import com.example.thread.thread.di.initKoinModule
 import com.example.thread.thread.presentation.screen.ThreadApp
 
 fun MainViewController() = ComposeUIViewController(
-    configure = { initKoinModule {  } }
+    configure = { initKoinModule() }
 ) {
     ThreadApp()
 }

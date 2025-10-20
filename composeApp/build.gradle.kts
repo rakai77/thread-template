@@ -42,22 +42,6 @@ kotlin {
             implementation(projects.shared)
             implementation(libs.jetbrains.compose.navigation)
             implementation(libs.icon.extended.md3)
-
-            implementation(libs.ktor.core)
-            implementation(libs.ktor.auth)
-            implementation(libs.ktor.cio)
-            implementation(libs.ktor.logging)
-            implementation(libs.ktor.serialization)
-            implementation(libs.ktor.encoding)
-            implementation(libs.ktor.content.negotiation)
-            implementation(libs.ktor.serialization.kotlinx.json)
-
-            implementation(libs.kotlinx.serialization.json)
-            implementation(libs.kotlinx.coroutines.core)
-            implementation(libs.kotlinx.datetime)
-            implementation(libs.koin.core)
-            implementation(libs.koin.compose.viewmodel)
-            implementation(libs.koin.compose)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

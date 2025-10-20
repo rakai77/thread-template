@@ -1,14 +1,6 @@
 package com.example.thread.thread.presentation.screen.login
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
@@ -16,16 +8,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
@@ -41,15 +25,14 @@ import com.example.thread.thread.presentation.component.TrailingTextField
 import com.example.thread.thread.presentation.navigation.AppRoute
 import com.example.thread.thread.presentation.theme.Black
 import com.example.thread.thread.presentation.theme.Primary
-import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
 fun LoginScreen(navController: NavHostController) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var isButtonEnable by remember { mutableStateOf(false) }
-    val registerText = "Belum punya akun? Daftar"
-    val notHaveAccount = "Belum punya akun? Daftar"
+    val registerText = "Daftar"
+    val notHaveAccount = "Belum punya akun? "
     val registerString = buildAnnotatedString {
         withStyle(style = SpanStyle(color = Black)) {
             pushStringAnnotation(tag = notHaveAccount, annotation = notHaveAccount)
