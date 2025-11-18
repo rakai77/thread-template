@@ -8,5 +8,6 @@ fun initKoinModule(appDeclaration: KoinAppDeclaration = {}) {
     runCatching { stopKoin() }
     startKoin {
         appDeclaration()
+        modules(listOf(remoteModule))
     }
 }
