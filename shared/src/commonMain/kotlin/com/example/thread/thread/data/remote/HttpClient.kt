@@ -5,6 +5,7 @@ import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.logging.*
 import io.ktor.client.plugins.websocket.*
+import io.ktor.client.request.header
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.Json
@@ -43,10 +44,12 @@ fun setupHttpClient(
         }
 
         defaultRequest {
+            host = baseUrl
             url {
                 protocol = URLProtocol.HTTPS
-                host = baseUrl
+
             }
+            header(HttpHeaders.Accept, "application/json")
         }
 
         if (isDebugMode) {

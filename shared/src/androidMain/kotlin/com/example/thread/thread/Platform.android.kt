@@ -12,6 +12,7 @@ class AndroidPlatform : Platform {
             engine {
                 config {
                     retryOnConnectionFailure(true)
+                    followSslRedirects(true)
                     followRedirects(true)
                 }
             }

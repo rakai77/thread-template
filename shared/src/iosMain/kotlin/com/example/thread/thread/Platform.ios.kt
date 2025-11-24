@@ -11,6 +11,7 @@ class IOSPlatform : Platform {
             engine {
                 configureRequest {
                     setAllowsCellularAccess(true)
+                    setAllowsConstrainedNetworkAccess(true)
                 }
             }
         }

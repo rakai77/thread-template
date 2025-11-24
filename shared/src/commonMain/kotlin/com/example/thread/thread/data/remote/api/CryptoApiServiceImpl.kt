@@ -5,9 +5,11 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
+import kotlinx.serialization.json.Json
 
 class CryptoApiServiceImpl(
-    private val httpClient: HttpClient
+    private val httpClient: HttpClient,
+    private val json: Json
 ) : CryptoApiService {
 
     override suspend fun get24HourTicker(symbol: String): Result<CryptoTickerResponse> {
@@ -23,8 +25,8 @@ class CryptoApiServiceImpl(
 
     override suspend fun getAllTickers(): Result<List<CryptoTickerResponse>> {
         return try {
-            val response = httpClient.get(Endpoint.GET_24_HOUR_TICKER)
-                .body<List<CryptoTickerResponse>>()
+            val responseString = httpClient.get(Endpoint.GET_24_HOUR_TICKER).body<String>()
+            val response = json.decodeFromString<List<CryptoTickerResponse>>(responseString)
             Result.success(response)
         } catch (e: Exception) {
             Result.failure(e)

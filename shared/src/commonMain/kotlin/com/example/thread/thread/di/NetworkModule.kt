@@ -37,7 +37,7 @@ val remoteModule = module {
         )
     }
 
-    single<CryptoApiService> { CryptoApiServiceImpl(httpClient = get()) }
+    single<CryptoApiService> { CryptoApiServiceImpl(httpClient = get(), json = get()) }
 
     single<BinanceWebSocketService> {
         BinanceWebSocketServiceImpl(
