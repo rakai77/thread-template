@@ -1,4 +1,4 @@
-package com.example.thread.thread.utils
+package com.example.thread.thread.data.remote
 
 import io.ktor.client.*
 import io.ktor.client.plugins.*
