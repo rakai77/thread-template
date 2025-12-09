@@ -1,73 +1,114 @@
-package com.example.thread.thread.utils
-
 import kotlin.math.abs
-import kotlin.math.pow
-import kotlin.math.roundToInt
+import kotlin.math.round
 
-/**
- * Format double untuk harga crypto
- * Multiplatform compatible
- */
-fun Double.formatPrice(): String {
+fun Double.toRupiahFormat(): String {
+    val absValue = abs(this)
+    val sign = if (this < 0) "-" else ""
+
     return when {
-        this >= 1000 -> this.formatDecimals(2)
-        this >= 1 -> this.formatDecimals(4)
-        else -> this.formatDecimals(6)
+        absValue >= 1_000_000_000_000 -> {
+            val value = absValue / 1_000_000_000_000
+            "${sign}Rp ${value.roundToDecimals(2)} T"
+        }
+        absValue >= 1_000_000_000 -> {
+            val value = absValue / 1_000_000_000
+            "${sign}Rp ${value.roundToDecimals(2)} M"
+        }
+        absValue >= 1_000_000 -> {
+            val value = absValue / 1_000_000
+            "${sign}Rp ${value.roundToDecimals(2)} Jt"
+        }
+        absValue >= 1_000 -> {
+            val value = absValue / 1_000
+            "${sign}Rp ${value.roundToDecimals(2)} Rb"
+        }
+        else -> {
+            "${sign}Rp ${absValue.roundToDecimals(2)}"
+        }
     }
 }
 
-/**
- * Format double untuk persentase
- * Multiplatform compatible
- */
-fun Double.formatPercent(): String {
-    return abs(this).formatDecimals(2)
-}
-
-/**
- * Extension function untuk format decimal
- * Pure Kotlin - support semua platform
- */
-fun Double.formatDecimals(decimals: Int): String {
-    if (this.isNaN() || this.isInfinite()) return "0"
-
-    val multiplier = 10.0.pow(decimals)
-    val rounded = (this * multiplier).roundToInt() / multiplier
-
-    // Build string manually
-    val integerPart = rounded.toInt()
-    val decimalPart = abs(rounded - integerPart)
-
-    if (decimals == 0) {
-        return integerPart.toString()
+// ✅ Versi tanpa pow - menggunakan when expression
+fun Double.roundToDecimals(decimals: Int): String {
+    val multiplier = when (decimals) {
+        0 -> 1.0
+        1 -> 10.0
+        2 -> 100.0
+        3 -> 1000.0
+        4 -> 10000.0
+        else -> 100.0 // default 2 decimals
     }
 
-    // Calculate decimal digits
-    val decimalDigits = (decimalPart * multiplier).roundToInt()
-    val decimalString = decimalDigits.toString().padStart(decimals, '0')
-
-    return "$integerPart.$decimalString"
+    val rounded = round(this * multiplier) / multiplier
+    return rounded.toFormattedString(decimals)
 }
 
-/**
- * Format dengan thousand separator
- * Contoh: 45000.50 -> "45,000.50"
- */
-fun Double.formatWithSeparator(decimals: Int = 2): String {
-    val formatted = this.formatDecimals(decimals)
-    val parts = formatted.split(".")
-    val integerPart = parts[0]
-    val decimalPart = if (parts.size > 1) parts[1] else ""
+// ✅ Format dengan pemisah ribuan dan desimal
+fun Double.toFormattedString(decimals: Int): String {
+    // Split integer dan decimal part
+    val integerPart = this.toLong()
+    val decimalPart = ((this - integerPart) * 100).toLong() // untuk 2 decimals
 
-    // Add thousand separator
-    val withSeparator = integerPart.reversed()
-        .chunked(3)
-        .joinToString(",")
-        .reversed()
+    // Format integer dengan titik pemisah ribuan
+    val formattedInteger = integerPart.toThousandSeparator()
 
-    return if (decimalPart.isNotEmpty()) {
-        "$withSeparator.$decimalPart"
+    // Gabungkan dengan decimal jika perlu
+    return if (decimals > 0) {
+        val decimalStr = decimalPart.toString().padStart(2, '0')
+        "$formattedInteger,$decimalStr"
     } else {
-        withSeparator
+        formattedInteger
     }
+}
+
+// ✅ Pemisah ribuan untuk Long
+fun Long.toThousandSeparator(): String {
+    val str = this.toString()
+    return str.reversed()
+        .chunked(3)
+        .joinToString(".")
+        .reversed()
+}
+
+// ✅ Versi lebih simple tanpa pemisah ribuan
+fun Double.toRupiahSimple(): String {
+    val absValue = abs(this)
+    val sign = if (this < 0) "-" else ""
+
+    return when {
+        absValue >= 1_000_000_000_000 -> {
+            val value = (absValue / 1_000_000_000_000 * 100).toLong() / 100.0
+            "${sign}Rp ${value} T"
+        }
+        absValue >= 1_000_000_000 -> {
+            val value = (absValue / 1_000_000_000 * 100).toLong() / 100.0
+            "${sign}Rp ${value} M"
+        }
+        absValue >= 1_000_000 -> {
+            val value = (absValue / 1_000_000 * 100).toLong() / 100.0
+            "${sign}Rp ${value} Jt"
+        }
+        absValue >= 1_000 -> {
+            val value = (absValue / 1_000 * 100).toLong() / 100.0
+            "${sign}Rp ${value} Rb"
+        }
+        else -> {
+            val value = (absValue * 100).toLong() / 100.0
+            "${sign}Rp ${value}"
+        }
+    }
+}
+
+// Format persen
+fun Double.toPercentFormat(): String {
+    val rounded = (this * 100 * 100).toLong() / 100.0
+    val sign = if (this >= 0) "+" else ""
+    return "$sign$rounded%"
+}
+
+// Format change dengan warna
+fun Double.toChangeFormat(): String {
+    val rounded = (this * 100).toLong() / 100.0
+    val sign = if (this >= 0) "+" else ""
+    return "$sign$rounded"
 }

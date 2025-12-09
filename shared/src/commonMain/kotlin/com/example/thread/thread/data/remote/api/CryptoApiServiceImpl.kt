@@ -1,6 +1,8 @@
 package com.example.thread.thread.data.remote.api
 
 import com.example.thread.thread.data.remote.response.CryptoTickerResponse
+import com.example.thread.thread.data.remote.response.coindesk.TopMarketCapResponse
+import com.example.thread.thread.utils.Constant
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -12,34 +14,21 @@ class CryptoApiServiceImpl(
     private val json: Json
 ) : CryptoApiService {
 
-    override suspend fun get24HourTicker(symbol: String): Result<CryptoTickerResponse> {
+    override suspend fun getTopMarketCap(
+        currency: String,
+        limit: Int,
+        page: Int
+    ): Result<TopMarketCapResponse> {
         return try {
-            val response = httpClient.get(Endpoint.GET_24_HOUR_TICKER) {
-                parameter("symbol", symbol)
-            }.body<CryptoTickerResponse>()
-            Result.success(response)
+            val response = httpClient.get(Endpoint.TOP_MARKET_CAP_ENDPOINT) {
+                parameter("tsym", currency)
+                parameter("limit", limit)
+                parameter("page", page)
+            }
+            Result.success(response.body<TopMarketCapResponse>())
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
-    override suspend fun getAllTickers(): Result<List<CryptoTickerResponse>> {
-        return try {
-            val responseString = httpClient.get(Endpoint.GET_24_HOUR_TICKER).body<String>()
-            val response = json.decodeFromString<List<CryptoTickerResponse>>(responseString)
-            Result.success(response)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    override suspend fun getServerTime(): Result<Long> {
-        return try {
-            val response = httpClient.get(Endpoint.GET_SERVER_TIME)
-                .body<Map<String, Long>>()
-            Result.success(response["serverTime"] ?: 0L)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
 }

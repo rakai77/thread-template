@@ -29,6 +29,7 @@ kotlin {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
             implementation(libs.ktor.client.okhttp)
+            implementation("org.slf4j:slf4j-android:1.7.36")
         }
         commonMain.dependencies {
             implementation(compose.runtime)

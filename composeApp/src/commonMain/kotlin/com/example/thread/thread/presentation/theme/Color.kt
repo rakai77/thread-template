@@ -146,3 +146,32 @@ object FindeColor {
     val ButtonGrayColorDisableApp = JetBlack.Minus60
     val ButtonTextColorDisableApp = JetBlack.Minus20
 }
+
+object CryptoColors {
+    // Price colors
+    val PriceUp = Color(0xFF00C853)      // Hijau terang
+    val PriceDown = Color(0xFFFF1744)    // Merah terang
+    val PriceNeutral = Color(0xFF9E9E9E) // Abu-abu
+
+    // Background colors
+    val CardBackground = Color(0xFF1E1E1E)
+    val CardBackgroundLight = Color(0xFF2A2A2A)
+    val AppBackground = Color(0xFF121212)
+
+    // Text colors
+    val TextPrimary = Color(0xFFFFFFFF)
+    val TextSecondary = Color(0xFFB0B0B0)
+    val TextTertiary = Color(0xFF757575)
+
+    // Accent
+    val AccentGold = Color(0xFFFFD700)
+    val AccentOrange = Color(0xFFFF9800)
+
+    // Gradient colors untuk coin avatar
+    val GradientGold = listOf(Color(0xFFFFD700), Color(0xFFFFB300))
+    val GradientGreen = listOf(Color(0xFF00C853), Color(0xFF00E676))
+    val GradientBlue = listOf(Color(0xFF2196F3), Color(0xFF64B5F6))
+    val GradientRed = listOf(Color(0xFFFF1744), Color(0xFFFF5252))
+    val GradientPurple = listOf(Color(0xFF9C27B0), Color(0xFFBA68C8))
+    val GradientOrange = listOf(Color(0xFFFF9800), Color(0xFFFFB74D))
+}

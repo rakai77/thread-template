@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidLibrary)
+    kotlin("plugin.serialization") version "2.2.20"
 }
 
 kotlin {
@@ -18,8 +19,17 @@ kotlin {
     jvm()
 
     sourceSets {
+        all {
+            languageSettings.optIn("kotlinx.serialization.ExperimentalSerializationApi")
+        }
         androidMain.dependencies {
             implementation(libs.ktor.client.okhttp)
+
+            // ✅ ADD: OkHttp logging
+            implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+
+            // ✅ ADD: SLF4J for Android
+            implementation("org.slf4j:slf4j-android:1.7.36")
         }
         commonMain.dependencies {
             // put your Multiplatform dependencies here

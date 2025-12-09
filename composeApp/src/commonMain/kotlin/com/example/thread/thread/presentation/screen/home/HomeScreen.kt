@@ -1,57 +1,31 @@
 package com.example.thread.thread.presentation.screen.home
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.ArrowDropUp
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
-import com.example.thread.thread.domain.model.CryptoTicker
-import com.example.thread.thread.utils.formatPercent
-import com.example.thread.thread.utils.formatPrice
+import com.example.thread.thread.domain.model.coindesk.CoinMarketCap
+import com.example.thread.thread.presentation.component.EmptyState
+import com.example.thread.thread.presentation.component.ShimmerCoinCard
+import com.example.thread.thread.presentation.components.CryptoCoinCard
+import com.example.thread.thread.presentation.theme.CryptoColors
+import com.example.thread.thread.utils.getCurrentTimeMillis
+import kotlinx.coroutines.delay
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -59,53 +33,82 @@ import org.koin.compose.viewmodel.koinViewModel
 fun HomeScreen(
     navController: NavHostController,
 ) {
+
     val viewModel: HomeViewModel = koinViewModel()
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(30_000) // 30 seconds
+            if (state.coins.isNotEmpty() && !state.isLoading) {
+                viewModel.refresh()
+            }
+        }
+    }
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Crypto Market") },
-                actions = {
-                    IconButton(onClick = { viewModel.onRefresh() }) {
-                        Icon(
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = "Refresh"
-                        )
-                    }
-                }
+            CryptoTopBar(
+                onRefresh = { viewModel.refresh() },
+                isRefreshing = state.isRefreshing,
+                lastUpdateTime = state.lastUpdateTime
             )
-        }
+        },
+        containerColor = CryptoColors.AppBackground
     ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            when {
-                state.isLoading -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center)
-                    )
+            // Main content based on UI state
+            AnimatedContent(
+                targetState = uiState,
+                transitionSpec = {
+                    fadeIn(animationSpec = tween(300)) togetherWith
+                            fadeOut(animationSpec = tween(300))
                 }
+            ) { currentUiState ->
+                when (currentUiState) {
+                    is CryptoUiState.Initial -> Unit
+                    is CryptoUiState.Loading -> {
+                        LoadingContent()
+                    }
 
-                state.error != null && state.cryptoList.isEmpty() -> {
-                    ErrorMessage(
-                        message = state.error ?: "Unknown error",
-                        onRetry = { viewModel.onRefresh() },
-                        modifier = Modifier.align(Alignment.Center)
-                    )
+                    is CryptoUiState.Success -> {
+                        if (currentUiState.coins.isEmpty()) {
+                            EmptyContent(
+                                onRetry = { viewModel.fetchTopMarketCap() }
+                            )
+                        } else {
+                            CryptoListContent(
+                                coins = currentUiState.coins,
+                                listState = listState,
+                                isRefreshing = state.isRefreshing,
+                                onCoinClick = { coin ->
+                                    println("Clicked: ${coin.name}")
+                                    // Navigate to detail
+                                }
+                            )
+                        }
+                    }
+
+                    is CryptoUiState.Error -> {
+                        ErrorContent(
+                            message = currentUiState.message,
+                            onRetry = { viewModel.fetchTopMarketCap() }
+                        )
+                    }
+                    else -> Unit
                 }
+            }
 
-                state.cryptoList.isEmpty() -> {
-                    Text(
-                        text = "No data available",
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-                }
-
-                else -> {
-                    CryptoList(cryptoList = state.cryptoList)
+            state.error?.let { errorMessage ->
+                LaunchedEffect(errorMessage) {
+                    delay(3000)
+                    viewModel.clearError()
                 }
             }
         }
@@ -113,159 +116,171 @@ fun HomeScreen(
 
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CryptoList(cryptoList: List<CryptoTicker>) {
+private fun CryptoTopBar(
+    onRefresh: () -> Unit,
+    isRefreshing: Boolean,
+    lastUpdateTime: Long,
+    modifier: Modifier = Modifier
+) {
+    TopAppBar(
+        title = {
+            Column {
+                Text(
+                    text = "Crypto Market",
+                    fontWeight = FontWeight.Bold
+                )
+                if (lastUpdateTime > 0) {
+                    val timeAgo = remember(lastUpdateTime) {
+                        val diff = getCurrentTimeMillis() - lastUpdateTime
+                        when {
+                            diff < 60_000 -> "Just now"
+                            diff < 3600_000 -> "${diff / 60_000}m ago"
+                            else -> "${diff / 3600_000}h ago"
+                        }
+                    }
+                    Text(
+                        text = "Updated $timeAgo",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = CryptoColors.TextSecondary
+                    )
+                }
+            }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = CryptoColors.AppBackground,
+            titleContentColor = CryptoColors.TextPrimary
+        ),
+        actions = {
+            IconButton(
+                onClick = onRefresh,
+                enabled = !isRefreshing
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Refresh,
+                    contentDescription = "Refresh",
+                    tint = if (isRefreshing)
+                        CryptoColors.TextSecondary
+                    else
+                        CryptoColors.AccentGold
+                )
+            }
+        },
+        modifier = modifier
+    )
+}
+
+@Composable
+private fun LoadingContent(
+    modifier: Modifier = Modifier
+) {
     LazyColumn(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        items(
-            items = cryptoList,
-            key = { it.symbol }
-        ) {
-            CryptoCard(crypto = it)
+        items(10) {
+            ShimmerCoinCard()
         }
     }
 }
 
 @Composable
-fun CryptoCard(crypto: CryptoTicker) {
-    val isPositive = crypto.priceChangePercent >= 0
+private fun CryptoListContent(
+    coins: List<CoinMarketCap>,
+    listState: androidx.compose.foundation.lazy.LazyListState,
+    isRefreshing: Boolean,
+    onCoinClick: (CoinMarketCap) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    LazyColumn(
+        state = listState,
+        modifier = modifier.fillMaxSize(),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        // Refreshing indicator di top
+        if (isRefreshing) {
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            color = CryptoColors.AccentGold,
+                            strokeWidth = 2.dp
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Updating...",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = CryptoColors.TextSecondary
+                        )
+                    }
+                }
+            }
+        }
 
-    var visible by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) {
-        visible = true
-    }
-
-    AnimatedVisibility(visible = visible) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(100.dp),
-            shape = RoundedCornerShape(16.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface
-            )
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
+        // List of coins dengan animated items
+        itemsIndexed(
+            items = coins,
+            key = { _, coin -> coin.id }
+        ) { index, coin ->
+            AnimatedVisibility(
+                visible = true,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically()
             ) {
-                // Left: Symbol & Name
-                Column(
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text(
-                        text = crypto.symbol.replace("USDT", ""),
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = crypto.symbol,
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                    )
-                }
-
-                // Center: Price
-                Column(
-                    modifier = Modifier.weight(1f),
-                    horizontalAlignment = Alignment.End
-                ) {
-                    Text(
-                        text = "$${crypto.currentPrice.formatPrice()}", // ✅ Extension function
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "$${crypto.priceChange.formatPrice()}", // ✅ Extension function
-                        fontSize = 12.sp,
-                        color = if (isPositive) Color(0xFF4CAF50) else Color(0xFFF44336)
-                    )
-                }
-
-                // Right: Percentage & Indicator
-                Spacer(modifier = Modifier.width(12.dp))
-                PriceChangeIndicator(
-                    priceChangePercent = crypto.priceChangePercent,
-                    isPositive = isPositive
+                CryptoCoinCard(
+                    coin = coin,
+                    rank = index + 1,
+                    onClick = { onCoinClick(coin) }
                 )
             }
         }
-    }
-}
 
-@Composable
-fun PriceChangeIndicator(
-    priceChangePercent: Double,
-    isPositive: Boolean
-) {
-    val backgroundColor = if (isPositive) Color(0xFF4CAF50) else Color(0xFFF44336)
-    val icon = if (isPositive) Icons.Default.ArrowDropUp else Icons.Default.ArrowDropDown
-
-    val rotation by animateFloatAsState(
-        targetValue = if (isPositive) 0f else 180f,
-        animationSpec = tween(durationMillis = 300),
-        label = "rotation"
-    )
-
-    Box(
-        modifier = Modifier
-            .size(70.dp, 40.dp)
-            .background(
-                color = backgroundColor.copy(alpha = 0.1f),
-                shape = RoundedCornerShape(8.dp)
-            ),
-        contentAlignment = Alignment.Center
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = if (isPositive) "Up" else "Down",
-                tint = backgroundColor,
-                modifier = Modifier
-                    .size(24.dp)
-                    .rotate(rotation)
-            )
-            Text(
-                text = "${priceChangePercent.formatPercent()}%",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
-                color = backgroundColor
-            )
+        // Footer spacer
+        item {
+            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }
 
 @Composable
-fun ErrorMessage(
+private fun EmptyContent(
+    onRetry: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    EmptyState(
+        emoji = "📊",
+        title = "No Cryptocurrencies",
+        message = "No cryptocurrency data available at the moment",
+        actionText = "Refresh",
+        onAction = onRetry,
+        modifier = modifier
+    )
+}
+
+@Composable
+private fun ErrorContent(
     message: String,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = modifier.padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = message,
-            color = MaterialTheme.colorScheme.error,
-            style = MaterialTheme.typography.bodyMedium
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = onRetry) {
-            Text("Retry")
-        }
-    }
+    EmptyState(
+        emoji = "❌",
+        title = "Oops!",
+        message = message,
+        actionText = "Try Again",
+        onAction = onRetry,
+        modifier = modifier
+    )
 }

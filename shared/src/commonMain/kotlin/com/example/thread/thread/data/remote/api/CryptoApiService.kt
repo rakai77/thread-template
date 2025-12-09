@@ -1,9 +1,12 @@
 package com.example.thread.thread.data.remote.api
 
-import com.example.thread.thread.data.remote.response.CryptoTickerResponse
+import com.example.thread.thread.data.remote.response.coindesk.TopMarketCapResponse
+import com.example.thread.thread.utils.Constant
 
 interface CryptoApiService {
-    suspend fun get24HourTicker(symbol: String): Result<CryptoTickerResponse>
-    suspend fun getAllTickers(): Result<List<CryptoTickerResponse>>
-    suspend fun getServerTime(): Result<Long>
+    suspend fun getTopMarketCap(
+        currency: String = Constant.DEFAULT_CURRENCY,
+        limit: Int = Constant.DEFAULT_LIMIT,
+        page: Int = Constant.DEFAULT_PAGE
+    ): Result<TopMarketCapResponse>
 }
