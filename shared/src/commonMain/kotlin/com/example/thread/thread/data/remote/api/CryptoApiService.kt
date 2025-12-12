@@ -20,8 +20,8 @@ class CryptoApiService(
         return try {
             httpClient.get(Constants.ENDPOINT_SPOT_LATEST_TICK) {
                 parameter("limit", limit)
-                market?.let { parameter("market", it) }
-                instrument?.let { parameter("instrument", it) }
+                parameter("market", "binance")
+                parameter("instruments", "BTC-USD")
             }.body()
         } catch (e: ApiException) {
             throw e
