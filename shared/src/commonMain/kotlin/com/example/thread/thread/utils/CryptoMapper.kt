@@ -5,9 +5,6 @@ import com.example.thread.thread.data.remote.response.SpotTickResponse
 import com.example.thread.thread.domain.model.CryptoTicker
 import com.example.thread.thread.domain.model.toException
 
-/**
- * Map single DTO to domain model
- */
 fun toDomain(dto: SpotTickItemResponse): CryptoTicker {
     val lastPrice = dto.lastTradePrice ?: 0.0
     val dayOpen = dto.currentDayOpen ?: lastPrice
@@ -63,10 +60,6 @@ fun toDomainList(response: SpotTickResponse): List<CryptoTicker> {
         .map { toDomain(it) }
 }
 
-/**
- * Format price based on currency and magnitude
- * Uses KMP-compatible formatting
- */
 private fun formatPrice(price: Double, currency: String): String {
     val symbol = when (currency.uppercase()) {
         "USD" -> "$"

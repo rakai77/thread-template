@@ -68,10 +68,6 @@ class HomeViewModel(
                         )
                     }
                 }
-
-                is Result.Loading -> {
-                    // Already handled above
-                }
             }
         }
     }
@@ -105,16 +101,9 @@ class HomeViewModel(
                         )
                     }
                 }
-
-                is Result.Loading -> {}
             }
         }
     }
-
-    /**
-     * Observe WebSocket for real-time price updates
-     * Note: Don't show WebSocket errors on UI as per requirements
-     */
     private fun observeWebSocketUpdates(initialList: List<CryptoTicker>) {
         if (isWebSocketConnected || initialList.isEmpty()) return
 
@@ -136,18 +125,11 @@ class HomeViewModel(
                             // Don't show WebSocket errors on UI as per requirements
                             println("WebSocket Error (silent): ${result.message}")
                         }
-
-                        is Result.Loading -> {
-                            // WebSocket connecting
-                        }
                     }
                 }
         }
     }
 
-    /**
-     * Update specific crypto in the list with WebSocket data
-     */
     private fun updateCryptoInList(updatedCrypto: CryptoTicker) {
         _uiState.update { currentState ->
             val updatedList = currentState.cryptoList.map { crypto ->

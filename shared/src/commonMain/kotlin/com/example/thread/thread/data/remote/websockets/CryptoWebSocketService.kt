@@ -25,8 +25,6 @@ class CryptoWebSocketService(
     fun observeSpotTicks(
         subscriptions: List<String>
     ): Flow<Result<SpotTickItemResponse>> = flow {
-        emit(Result.Loading)
-
         try {
             httpClient.webSocket(
                 host = "data-streamer.coindesk.com",

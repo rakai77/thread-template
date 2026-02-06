@@ -127,7 +127,6 @@ class CryptoRepositoryImpl(
                         }
                     }
                     is Result.Error -> result
-                    is Result.Loading -> result
                 }
             }
     }
