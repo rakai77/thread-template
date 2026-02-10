@@ -4,20 +4,20 @@ import com.example.thread.thread.data.remote.response.coindesk.*
 import com.example.thread.thread.domain.model.coindesk.*
 import com.example.thread.thread.domain.model.coindesk.MarketCapMetaData
 
-fun mapTopMarketCapResponseToDomain(
-    response: TopMarketCapResponse,
-    currency: String
-): TopMarketCapResult {
-    return TopMarketCapResult(
-        coins = response.data?.mapNotNull {
-            mapCoinDataToDomain(it, currency)
-        } ?: emptyList(),
-        metaData = response.metaData?.let {
-            MarketCapMetaData(totalCount = it.count ?: 0)
-        },
-        hasWarning = response.hasWarning ?: false
-    )
-}
+fun TopMarketCapResponse.toDomain() = TopMarketCapResult(
+    message = message,
+    type = type,
+    sponsoredData = sponsoredData,
+    data = data,
+    rateLimit = null,
+    coins = this.data?.map {
+        mapCoinDataToDomain(it, "IDR")
+    } as List<CoinMarketCap>,
+    metaData = this.metaData?.let {
+        MarketCapMetaData(totalCount = it.count ?: 0)
+    },
+    hasWarning = hasWarning ?: false
+)
 
 fun mapCoinDataToDomain(
     data: CoinMarketCapData,
@@ -85,29 +85,4 @@ private fun mapDisplayDataToDomain(display: DisplayMarketData): DisplayData {
         high24h = display.high24Hour ?: "N/A",
         low24h = display.low24Hour ?: "N/A"
     )
-}
-
-// Mapper untuk WebSocket streaming
-fun mapCoinDataToStreamUpdate(
-    data: CoinMarketCapData,
-    currency: String
-): CryptoStreamUpdate? {
-    val rawData = data.raw?.get(currency) ?: return null
-
-    return CryptoStreamUpdate(
-        coinId = data.coinInfo.id,
-        symbol = data.coinInfo.name,
-        price = rawData.price ?: 0.0,
-        change = rawData.change24Hour ?: 0.0,
-        changePct = rawData.changePct24Hour ?: 0.0,
-        volume = rawData.volume24Hour ?: 0.0,
-        timestamp = rawData.lastUpdate ?: 0
-    )
-}
-
-fun mapCoinDataListToStreamUpdates(
-    dataList: List<CoinMarketCapData>,
-    currency: String
-): List<CryptoStreamUpdate> {
-    return dataList.mapNotNull { mapCoinDataToStreamUpdate(it, currency) }
 }

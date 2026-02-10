@@ -10,15 +10,14 @@ data class HomeUiState(
 )
 
 sealed class CryptoUiState {
-    data object Initial : CryptoUiState()
-    data object Loading : CryptoUiState()
+    data object Init : CryptoUiState()
+    data class Loading(val isLoading: Boolean) : CryptoUiState()
     data class Success(val coins: List<CoinMarketCap>) : CryptoUiState()
     data class Error(val message: String) : CryptoUiState()
 }
 
 data class CryptoListState(
     val coins: List<CoinMarketCap> = emptyList(),
-    val isLoading: Boolean = false,
     val isRefreshing: Boolean = false,
     val error: String? = null,
     val currency: String = "IDR",

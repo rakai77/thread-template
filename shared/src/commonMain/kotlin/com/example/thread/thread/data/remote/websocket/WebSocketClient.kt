@@ -49,7 +49,6 @@ class WebSocketClientImpl(
     ): Flow<Result<T>> {
         return flow {
             try {
-                // ✅ FIX: Correct WebSocket URL format with v2 and API key
                 val wsUrl = "$path?api_key=${Constant.API_KEY}"
                 println("🔌 Connecting to WebSocket: wss://$host$wsUrl")
 
@@ -65,10 +64,8 @@ class WebSocketClientImpl(
                 ) {
                     session = this
                     _isConnected.value = true
-
                     println("✅ WebSocket connected successfully")
 
-                    // Execute connection callback (for subscribing)
                     try {
                         onConnect()
                         println("📡 Subscription sent successfully")
@@ -78,7 +75,6 @@ class WebSocketClientImpl(
                         return@webSocket
                     }
 
-                    // Listen for incoming messages
                     try {
                         for (frame in incoming) {
                             when (frame) {
@@ -93,7 +89,6 @@ class WebSocketClientImpl(
                                         }
                                     } catch (e: Exception) {
                                         println("⚠️ Parser error: ${e.message}")
-                                        // Don't fail the entire flow for parse errors
                                     }
                                 }
                                 is Frame.Close -> {

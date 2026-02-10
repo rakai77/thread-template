@@ -1,6 +1,15 @@
 package com.example.thread.thread.domain.model.coindesk
 
+import com.example.thread.thread.data.remote.response.coindesk.CoinMarketCapData
+import com.example.thread.thread.data.remote.response.coindesk.RateLimit
+import com.example.thread.thread.data.remote.response.coindesk.SponsoredCoin
+
 data class TopMarketCapResult(
+    val message: String? = null,
+    val type: Int? = null,
+    val sponsoredData: List<SponsoredCoin>? = null,
+    val data: List<CoinMarketCapData>? = null,
+    val rateLimit: RateLimit? = null,
     val coins: List<CoinMarketCap>,
     val metaData: MarketCapMetaData?,
     val hasWarning: Boolean

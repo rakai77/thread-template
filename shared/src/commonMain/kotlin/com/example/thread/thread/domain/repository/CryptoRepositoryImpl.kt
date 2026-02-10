@@ -5,11 +5,10 @@ import com.example.thread.thread.data.remote.response.coindesk.CryptoCompareWSMe
 import com.example.thread.thread.data.remote.websocket.WebSocketService
 import com.example.thread.thread.domain.model.coindesk.CryptoStreamUpdate
 import com.example.thread.thread.domain.model.coindesk.TopMarketCapResult
-import com.example.thread.thread.utils.mapTopMarketCapResponseToDomain
+import com.example.thread.thread.utils.toDomain
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.map
 
 class CryptoRepositoryImpl(
     private val apiService: CryptoApiService,
@@ -20,36 +19,27 @@ class CryptoRepositoryImpl(
         currency: String,
         limit: Int,
         page: Int
-    ): Result<TopMarketCapResult> {
-        return try {
-            apiService.getTopMarketCap(currency, limit, page)
-                .map { response ->
-                    mapTopMarketCapResponseToDomain(response, currency)
-                }
-        } catch (e: Exception) {
-            Result.failure(e)
+    ): Flow<TopMarketCapResult> {
+        return flow {
+            val apiService = apiService.getTopMarketCap(currency, limit, page)
+            emit(apiService.toDomain())
         }
     }
 
-    // ✅ FIX: Watch multiple coins with correct mapping
     override fun watchTopMarketCap(
         currency: String,
         limit: Int
     ): Flow<Result<List<CryptoStreamUpdate>>> {
-        // This flow will collect individual coin updates
         return flow {
-            // We'll buffer updates and emit them periodically
             val updates = mutableMapOf<String, CryptoStreamUpdate>()
-
             webSocketService.subscribeToMultipleCoins(
                 coins = listOf("BTC", "ETH", "BNB", "XRP", "ADA", "SOL", "DOT", "DOGE", "AVAX", "MATIC"),
                 currency = currency
             ).collect { result ->
                 result.onSuccess { wsMessage ->
-                    val update = mapWSMessageToStreamUpdate(wsMessage, currency)
+                    val update = mapWSMessageToStreamUpdate(wsMessage)
                     if (update != null) {
                         updates[update.symbol] = update
-                        // Emit current state of all updates
                         emit(Result.success(updates.values.toList().take(limit)))
                     }
                 }.onFailure { error ->
@@ -61,30 +51,12 @@ class CryptoRepositoryImpl(
         }
     }
 
-    override fun watchCoinPrice(
-        fromSymbol: String,
-        toSymbol: String
-    ): Flow<Result<CryptoStreamUpdate>> {
-        return webSocketService.subscribeToCoinPrice(fromSymbol, toSymbol)
-            .map { result ->
-                result.mapCatching { wsMessage ->
-                    mapWSMessageToStreamUpdate(wsMessage, toSymbol)
-                        ?: throw IllegalStateException("Failed to map coin data")
-                }
-            }
-            .catch { error ->
-                emit(Result.failure(Exception("Coin price stream error: ${error.message}")))
-            }
-    }
-
     override suspend fun stopObserving() {
         webSocketService.unsubscribe()
     }
 
-    // ✅ NEW: Map WebSocket message to stream update
     private fun mapWSMessageToStreamUpdate(
         wsMessage: CryptoCompareWSMessage,
-        currency: String
     ): CryptoStreamUpdate? {
         val symbol = wsMessage.fromSymbol ?: return null
         val price = wsMessage.currentPrice ?: wsMessage.price ?: return null

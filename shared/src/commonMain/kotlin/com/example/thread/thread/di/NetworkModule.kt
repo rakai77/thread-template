@@ -11,7 +11,6 @@ import com.example.thread.thread.data.remote.websocket.WebSocketServiceImpl
 import com.example.thread.thread.domain.repository.CryptoRepository
 import com.example.thread.thread.domain.repository.CryptoRepositoryImpl
 import com.example.thread.thread.domain.usecase.GetTopMarketUseCase
-import com.example.thread.thread.domain.usecase.WatchCoinPriceUseCase
 import com.example.thread.thread.domain.usecase.WatchTopMarketCapUseCase
 import com.example.thread.thread.getPlatform
 import com.example.thread.thread.utils.Constant
@@ -50,5 +49,4 @@ val remoteModule = module {
 
     singleOf(::GetTopMarketUseCase)
     singleOf(::WatchTopMarketCapUseCase)
-    singleOf(::WatchCoinPriceUseCase)
 }

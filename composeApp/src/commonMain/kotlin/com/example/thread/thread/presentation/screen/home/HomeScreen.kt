@@ -39,15 +39,6 @@ fun HomeScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
 
-    LaunchedEffect(Unit) {
-        while (true) {
-            delay(30_000) // 30 seconds
-            if (state.coins.isNotEmpty() && !state.isLoading) {
-                viewModel.refresh()
-            }
-        }
-    }
-
     Scaffold(
         topBar = {
             CryptoTopBar(
@@ -72,7 +63,6 @@ fun HomeScreen(
                 }
             ) { currentUiState ->
                 when (currentUiState) {
-                    is CryptoUiState.Initial -> Unit
                     is CryptoUiState.Loading -> {
                         LoadingContent()
                     }

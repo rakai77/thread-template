@@ -163,13 +163,3 @@ data class CallsInfo(
     @SerialName("day") val day: Int? = null,
     @SerialName("month") val month: Int? = null
 )
-
-// WebSocket Top Market Cap Update
-@Serializable
-data class TopMarketCapWSMessage(
-    @SerialName("TYPE") val type: String,
-    @SerialName("MESSAGE") val message: String? = null,
-    @SerialName("INFO") val info: String? = null,
-    @SerialName("PARAMETER") val parameter: String? = null,
-    @SerialName("STREAMING_DATA") val streamingData: List<CoinMarketCapData>? = null
-)

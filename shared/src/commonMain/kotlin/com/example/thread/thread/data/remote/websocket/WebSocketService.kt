@@ -14,11 +14,6 @@ interface WebSocketService {
         currency: String = "USD"
     ): Flow<Result<CryptoCompareWSMessage>>
 
-    fun subscribeToCoinPrice(
-        fromSymbol: String,
-        toSymbol: String
-    ): Flow<Result<CryptoCompareWSMessage>>
-
     suspend fun unsubscribe()
 }
 
@@ -75,41 +70,6 @@ class WebSocketServiceImpl(
             }
         ).retry(3) { cause ->
             println("🔄 Retrying connection... Cause: ${cause.message}")
-            delay(2000)
-            true
-        }
-    }
-
-    override fun subscribeToCoinPrice(
-        fromSymbol: String,
-        toSymbol: String
-    ): Flow<Result<CryptoCompareWSMessage>> {
-        return webSocketClient.observeMessages(
-            host = Constant.WS_HOST,
-            path = Constant.WS_PATH,
-            parser = { message ->
-                try {
-                    val wsMessage = json.decodeFromString<CryptoCompareWSMessage>(message)
-                    if (wsMessage.type == "5" && wsMessage.currentPrice != null) {
-                        wsMessage
-                    } else {
-                        null
-                    }
-                } catch (e: Exception) {
-                    println("❌ Parse error: ${e.message}")
-                    null
-                }
-            },
-            onConnect = {
-                val subscriptionMessage = buildJsonObject {
-                    put("action", "SubAdd")
-                    putJsonArray("subs") {
-                        add("5~CCCAGG~$fromSymbol~$toSymbol")
-                    }
-                }
-                send(Frame.Text(json.encodeToString(subscriptionMessage)))
-            }
-        ).retry(3) { cause ->
             delay(2000)
             true
         }

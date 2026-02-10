@@ -2,16 +2,16 @@ package com.example.thread.thread.presentation.screen.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.thread.thread.domain.model.coindesk.CoinMarketCap
 import com.example.thread.thread.domain.usecase.GetTopMarketUseCase
 import com.example.thread.thread.domain.usecase.WatchTopMarketCapUseCase
-import com.example.thread.thread.utils.ErrorHandler
 import com.example.thread.thread.utils.getCurrentTimeMillis
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -23,7 +23,7 @@ class HomeViewModel(
     private val _state = MutableStateFlow(CryptoListState())
     val state = _state.asStateFlow()
 
-    private val _uiState = MutableStateFlow<CryptoUiState>(CryptoUiState.Initial)
+    private val _uiState = MutableStateFlow<CryptoUiState>(CryptoUiState.Init)
     val uiState = _uiState.asStateFlow()
 
     private var webSocketJob: Job? = null
@@ -40,86 +40,20 @@ class HomeViewModel(
         isRefresh: Boolean = false
     ) {
         viewModelScope.launch {
-            try {
-                _state.update { currentState ->
-                    currentState.copy(
-                        isLoading = !isRefresh,
-                        isRefreshing = isRefresh,
-                        error = null,
-                        currency = currency
-                    )
+            getTopMarketCapUseCase.invoke(currency, limit)
+                .onStart {
+                    _uiState.value = CryptoUiState.Loading(true)
                 }
-
-                if (_state.value.coins.isEmpty() && !isRefresh) {
-                    _uiState.value = CryptoUiState.Loading
+                .catch {
+                    _uiState.value = CryptoUiState.Loading(false)
+                    _uiState.value = CryptoUiState.Error(it.message ?: "")
                 }
-
-                getTopMarketCapUseCase(currency, limit, page = 0)
-                    .onSuccess { result ->
-                        val coins = result.coins
-
-                        _state.update { currentState ->
-                            currentState.copy(
-                                coins = coins,
-                                isLoading = false,
-                                isRefreshing = false,
-                                error = null,
-                                lastUpdateTime = getCurrentTimeMillis()
-                            )
-                        }
-
-                        _uiState.value = if (coins.isNotEmpty()) {
-                            CryptoUiState.Success(coins)
-                        } else {
-                            CryptoUiState.Error("No data available")
-                        }
-
-                        // ✅ Start WebSocket after successful HTTP fetch
-                        if (coins.isNotEmpty()) {
-                            startLiveUpdates(currency, limit)
-                        }
-
-                        println("✅ Loaded ${coins.size} coins")
-                        retryCount = 0
-                    }
-                    .onFailure { error ->
-                        val appError = ErrorHandler.handleException(error)
-                        val errorMessage = appError.message
-
-                        _state.update { currentState ->
-                            currentState.copy(
-                                isLoading = false,
-                                isRefreshing = false,
-                                error = errorMessage
-                            )
-                        }
-
-                        _uiState.value = CryptoUiState.Error(errorMessage)
-
-                        println("❌ Error: $errorMessage")
-
-                        // ✅ Auto retry logic
-                        if (retryCount < maxRetries && !isRefresh) {
-                            retryCount++
-                            delay(2000 * retryCount.toLong())
-                            fetchTopMarketCap(currency, limit, isRefresh)
-                        }
-                    }
-
-            } catch (e: Exception) {
-                val errorMessage = e.message ?: "Failed to fetch data"
-
-                _state.update { currentState ->
-                    currentState.copy(
-                        isLoading = false,
-                        isRefreshing = false,
-                        error = errorMessage
-                    )
+                .collect { result ->
+                    _uiState.value = CryptoUiState.Loading(false)
+                    val coins = result.coins
+                    _uiState.value = CryptoUiState.Success(coins)
+                    println("✅ Loaded ${coins.size} coins")
                 }
-
-                _uiState.value = CryptoUiState.Error(errorMessage)
-                println("❌ Exception: $errorMessage")
-            }
         }
     }
 

@@ -8,5 +8,5 @@ interface CryptoApiService {
         currency: String = Constant.DEFAULT_CURRENCY,
         limit: Int = Constant.DEFAULT_LIMIT,
         page: Int = Constant.DEFAULT_PAGE
-    ): Result<TopMarketCapResponse>
+    ): TopMarketCapResponse
 }

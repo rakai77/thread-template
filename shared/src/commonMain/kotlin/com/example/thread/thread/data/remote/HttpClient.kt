@@ -18,7 +18,6 @@ fun setupHttpClient(
     httpClientProvider: HttpClient
 ): HttpClient {
     return httpClientProvider.config {
-        // ✅ IMPORTANT: Set expectSuccess to false to handle errors manually
         expectSuccess = false
 
         install(WebSockets) {
@@ -29,9 +28,8 @@ fun setupHttpClient(
             )
         }
 
-        // ✅ FIX: More lenient timeout settings
         install(HttpTimeout) {
-            requestTimeoutMillis = 120_000  // Increased to 120 seconds
+            requestTimeoutMillis = 120_000
             connectTimeoutMillis = 60_000
             socketTimeoutMillis = 60_000
         }
@@ -47,11 +45,10 @@ fun setupHttpClient(
         }
 
         install(HttpRedirect) {
-            checkHttpMethod = false  // ✅ Allow redirects for all methods
+            checkHttpMethod = false
             allowHttpsDowngrade = false
         }
 
-        // ✅ FIX: Proper default request configuration
         defaultRequest {
             url {
                 protocol = URLProtocol.HTTPS
@@ -59,7 +56,6 @@ fun setupHttpClient(
                 parameters.append("api_key", Constant.API_KEY)
             }
 
-            // ✅ Add default headers
             header("Accept", "application/json")
             header("Content-Type", "application/json")
         }
