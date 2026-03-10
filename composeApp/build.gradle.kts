@@ -25,12 +25,6 @@ kotlin {
     }
 
     sourceSets {
-        androidMain.dependencies {
-            implementation(compose.preview)
-            implementation(libs.androidx.activity.compose)
-            implementation(libs.ktor.client.okhttp)
-            implementation("org.slf4j:slf4j-android:1.7.36")
-        }
         commonMain.dependencies {
             implementation(compose.runtime)
             implementation(compose.foundation)
@@ -40,23 +34,33 @@ kotlin {
             implementation(compose.components.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
+
             implementation(projects.shared)
+
+            implementation(libs.koin.compose)
+            implementation(libs.koin.compose.viewmodel)
+
             implementation(libs.jetbrains.compose.navigation)
             implementation(libs.icon.extended.md3)
         }
+
+        androidMain.dependencies {
+            implementation(compose.preview)
+            implementation(libs.androidx.activity.compose)
+        }
+
         commonTest.dependencies {
             implementation(libs.kotlin.test)
         }
-        iosMain.dependencies {
-            implementation(libs.ktor.client.darwin)
-        }
     }
+
+
 }
+
 
 android {
     namespace = "com.example.thread.thread"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
-
     defaultConfig {
         applicationId = "com.example.thread.thread"
         minSdk = libs.versions.android.minSdk.get().toInt()
@@ -78,10 +82,9 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+    buildFeatures { resValues = true }
 }
 
 dependencies {
-    implementation("io.ktor:ktor-client-okhttp-jvm:3.3.0")
     debugImplementation(compose.uiTooling)
 }
-

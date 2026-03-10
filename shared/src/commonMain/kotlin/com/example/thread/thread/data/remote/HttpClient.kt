@@ -62,11 +62,7 @@ fun setupHttpClient(
 
         if (isDebugMode) {
             install(Logging) {
-                logger = object : Logger {
-                    override fun log(message: String) {
-                        println("Ktor: $message")
-                    }
-                }
+                logger = Logger.SIMPLE
                 level = LogLevel.ALL
             }
         }
